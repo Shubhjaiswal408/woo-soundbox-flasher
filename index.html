@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WooCommerce Soundbox Flasher | techiesms</title>
+<meta name="description" content="Flash the techiesms WooCommerce Soundbox firmware to an ESP32 straight from your browser.">
+<meta name="color-scheme" content="dark">
+
+<!-- ESP Web Tools (pinned version) -->
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --line: #262d36;
+    --text: #e6edf3;
+    --muted: #9aa5b1;
+    --accent: #46c1f1;
+    --accent-2: #1a85c2;
+    --ok: #3fb950;
+    --warn: #d29922;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  main { max-width: 880px; margin: 0 auto; padding: 48px 16px 32px; }
+
+  header { text-align: center; margin-bottom: 32px; }
+  .brand { display: inline-block; margin-bottom: 14px; }
+  .brand img { display: block; width: 200px; height: auto; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border: 1px solid var(--line);
+    border-radius: 999px; color: var(--muted); font-size: 13px;
+  }
+  h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.2; margin: 14px 0 8px; font-weight: 650; }
+  .subtitle { color: var(--muted); margin: 0 auto; max-width: 560px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+  }
+  h2 { font-size: 18px; margin: 0 0 12px; font-weight: 600; }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); font-size: 14px; }
+
+  /* ---- Flash card ---- */
+  .flash { text-align: center; padding: 32px 24px; }
+  .flash p { margin: 14px 0 0; }
+
+  /* The REAL ESP Web Tools trigger (slot="activate"), styled directly. */
+  esp-web-install-button button[slot="activate"] {
+    appearance: none; border: 0; cursor: pointer;
+    padding: 14px 32px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font: 600 17px/1 inherit; letter-spacing: .2px;
+    box-shadow: 0 4px 14px rgba(70, 193, 241, .25);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  esp-web-install-button button[slot="activate"]:hover {
+    transform: translateY(-1px); filter: brightness(1.08);
+    box-shadow: 0 6px 18px rgba(70, 193, 241, .32);
+  }
+  esp-web-install-button button[slot="activate"]:active { transform: translateY(0); }
+  esp-web-install-button button[slot="activate"]:focus-visible {
+    outline: 2px solid #fff; outline-offset: 3px;
+  }
+
+  .notice {
+    display: block; margin-top: 4px; padding: 12px 16px; border-radius: 10px;
+    border: 1px solid var(--warn); color: var(--warn); font-size: 15px;
+  }
+
+  .btn-secondary {
+    display: inline-block; margin-top: 18px; padding: 10px 20px;
+    border: 1px solid var(--line); border-radius: 10px;
+    color: var(--text); text-decoration: none; font-size: 15px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .btn-secondary:hover { border-color: var(--accent); background: #1c2330; }
+  .links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .diagram { display: block; width: 100%; height: auto; border-radius: 10px; margin-top: 4px; }
+
+  /* ---- Grid of info cards ---- */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 16px; }
+  .grid .card { margin: 0; }
+
+  ol, ul { margin: 0; padding-left: 20px; }
+  li { margin: 6px 0; }
+  code {
+    background: #0b0f14; border: 1px solid var(--line); border-radius: 6px;
+    padding: 1px 6px; font: 14px ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; }
+
+  .warn { border-color: rgba(210, 153, 34, .55); }
+  .warn h2 { color: var(--warn); }
+
+  details { border-top: 1px solid var(--line); padding: 12px 0; }
+  details:first-of-type { border-top: 0; padding-top: 0; }
+  summary { cursor: pointer; font-weight: 550; }
+  details p, details ul { margin-top: 8px; color: var(--muted); }
+
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 24px 16px 40px; }
+  footer a { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <a class="brand" href="https://www.youtube.com/@techiesms" target="_blank" rel="noopener">
+      <img src="assets/techiesms-logo.png" alt="techiesms - explore | learn | share" width="200" height="66">
+    </a><br>
+    <span class="badge">Firmware v1.0.0 &middot; ESP32</span>
+    <h1>WooCommerce Soundbox</h1>
+    <p class="subtitle">
+      Speaks every new order from your online store, like a UPI soundbox:
+      &ldquo;New order received of rupees 1499&rdquo;. No plugin and no code on the website, only a read-only API key.
+    </p>
+  </header>
+
+  <!-- Flash -->
+  <section class="card flash">
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">Flash Firmware</button>
+      <span slot="unsupported" class="notice">
+        Your browser can't flash devices. Open this page in <b>Chrome</b> or <b>Edge</b> on a computer.
+      </span>
+      <span slot="not-allowed" class="notice">
+        Flashing needs a secure page. Open it from the <b>https://</b> GitHub Pages address.
+      </span>
+    </esp-web-install-button>
+    <p class="muted">Connect the ESP32 with a USB data cable first. Works in Chrome and Edge on Windows, macOS, Linux and ChromeOS.</p>
+    <div class="links">
+      <a class="btn-secondary" href="https://github.com/Shubhjaiswal408/woo-soundbox-flasher#readme" target="_blank" rel="noopener">Read the full guide</a>
+      <a class="btn-secondary" href="https://github.com/Shubhjaiswal408/woo-soundbox-flasher/tree/main/source/WooSoundbox" target="_blank" rel="noopener">Source code</a>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="card">
+    <h2>How it works</h2>
+    <img class="diagram" src="assets/how-it-works.svg" alt="A customer orders, WooCommerce marks it processing, the ESP32 asks the store every 10 seconds, then the OLED shows the order and the speaker says it" loading="lazy" width="960" height="360">
+    <details style="margin-top:12px">
+      <summary>Inside the code</summary>
+      <img class="diagram" src="assets/code-flow.svg" alt="Start-up steps, then a loop every 10 seconds that fetches orders, finds new IDs and announces them oldest first" loading="lazy" width="960" height="600" style="margin-top:12px">
+    </details>
+  </section>
+
+  <div class="grid">
+    <!-- Board -->
+    <section class="card">
+      <h2>Supported board</h2>
+      <table>
+        <tr><th>Board</th><td>ESP32 Dev Module (classic ESP32, 4&nbsp;MB flash)</td></tr>
+        <tr><th>Chip</th><td>ESP32 (ESP32-D0WD / WROOM-32)</td></tr>
+        <tr><th>Display</th><td>SSD1306 128&times;32 OLED, I2C</td></tr>
+        <tr><th>Audio</th><td>MAX98357A I2S amp + 4&ndash;8&nbsp;&Omega; speaker</td></tr>
+      </table>
+      <p class="muted" style="margin-top:10px">Not for ESP32-S3, C3 or C6 boards.</p>
+    </section>
+
+    <!-- Wiring -->
+    <section class="card">
+      <h2>Wiring</h2>
+      <table>
+        <tr><th>OLED SDA / SCL</th><td>GPIO 21 / 22</td></tr>
+        <tr><th>OLED VCC</th><td>3V3</td></tr>
+        <tr><th>Amp DIN</th><td>GPIO 27</td></tr>
+        <tr><th>Amp BCLK / LRC</th><td>GPIO 26 / 25</td></tr>
+        <tr><th>Amp VIN</th><td>5V (+ 470&ndash;1000&nbsp;&micro;F cap)</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <div class="grid">
+    <!-- API key -->
+    <section class="card">
+      <h2>1. Make a read-only API key</h2>
+      <ol>
+        <li>WordPress &rarr; <b>WooCommerce &rarr; Settings &rarr; Advanced &rarr; REST API</b>.</li>
+        <li>Click <b>Add key</b>, give it a name, set <b>Permissions: Read</b>.</li>
+        <li>Copy the <code>ck_&hellip;</code> key and <code>cs_&hellip;</code> secret. The secret is shown only once.</li>
+      </ol>
+    </section>
+
+    <!-- Flash steps -->
+    <section class="card">
+      <h2>2. Flash the board</h2>
+      <ol>
+        <li>Plug the ESP32 in with a <b>data</b> USB cable.</li>
+        <li>Click <b>Flash Firmware</b> and pick its port (<code>COM&hellip;</code>, <code>CP210x</code> or <code>CH340</code>).</li>
+        <li>Click <b>Install</b>, keep <b>Erase device</b> ticked the first time.</li>
+        <li>Wait for <b>Installation complete</b>, then unplug and replug.</li>
+      </ol>
+    </section>
+  </div>
+
+  <!-- Setup -->
+  <section class="card">
+    <h2>3. Set it up from your phone</h2>
+    <ol>
+      <li>The OLED shows <b>SETUP MODE</b>. Join Wi-Fi <code>Woo-Soundbox</code>, password <code>soundbox</code>.</li>
+      <li>The setup page opens (or go to <code>192.168.4.1</code>).</li>
+      <li>Enter your 2.4&nbsp;GHz Wi-Fi, the store URL (e.g. <code>https://yourstore.com/</code>), the key and the secret.</li>
+      <li>Tap <b>Save</b>. It restarts, beeps, and starts watching for orders.</li>
+    </ol>
+    <p class="muted" style="margin-top:10px">Orders that already exist when it starts are remembered, not announced. Only new orders after that are spoken.</p>
+  </section>
+
+  <!-- Warning -->
+  <section class="card warn">
+    <h2>Before you flash</h2>
+    <ul>
+      <li>Use a <b>Read</b>-only API key. The key can still read customer details, so never share it.</li>
+      <li><b>Erase device</b> wipes the saved Wi-Fi and store settings.</li>
+      <li>Close the Arduino IDE Serial Monitor and any other program using the port.</li>
+      <li>On shared hosting, a 10&nbsp;s check is fine. Don't make it faster: it can slow your website.</li>
+    </ul>
+  </section>
+
+  <!-- Using it -->
+  <section class="card">
+    <h2>Using the soundbox</h2>
+    <ul>
+      <li><b>New order:</b> OLED shows <code>#4521 Rahul</code> and <code>Rs.1499</code>, the LED lights, and it says &ldquo;New order received of rupees 1499&rdquo;.</li>
+      <li><b>Voice not available:</b> it beeps twice instead.</li>
+      <li><b>Hold BOOT for 10&nbsp;s</b> while running: erases all settings and opens setup again (countdown on the OLED).</li>
+      <li>Expect the announcement about <b>5&ndash;15&nbsp;s</b> after the order, because it checks the store on a timer.</li>
+    </ul>
+  </section>
+
+  <!-- Troubleshooting -->
+  <section class="card">
+    <h2>Troubleshooting</h2>
+
+    <details>
+      <summary>No port appears in the list</summary>
+      <ul>
+        <li>Try another USB cable. Many cables are charge-only.</li>
+        <li>Install the USB driver for your board's chip:
+          <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers" target="_blank" rel="noopener" style="color:var(--text)">CP210x</a> or
+          <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener" style="color:var(--text)">CH340</a>.</li>
+        <li>Use a USB port directly on the computer (no hub).</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>"Failed to connect" or it gets stuck connecting</summary>
+      <ul>
+        <li>Hold <b>BOOT</b>, press and release <b>EN/RST</b>, then release BOOT. Click Flash Firmware again.</li>
+        <li>Close the Arduino IDE, Serial Monitor or any app using the port.</li>
+        <li>Unplug the amplifier's VIN while flashing if the board keeps resetting.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>Setup page says "The store rejected the API key"</summary>
+      <p>The key or secret is wrong, or the key has no Read permission. Make a new key under WooCommerce &rarr; Settings &rarr; Advanced &rarr; REST API and enter it again.</p>
+    </details>
+
+    <details>
+      <summary>Setup page says "Store not found (HTTP 404)"</summary>
+      <p>Check the store URL. Use the home page address with <code>https://</code>, e.g. <code>https://yourstore.com/</code>. Permalinks must not be set to &ldquo;Plain&rdquo; in WordPress.</p>
+    </details>
+
+    <details>
+      <summary>No order is announced</summary>
+      <ul>
+        <li>Only orders in <b>Processing</b> status are spoken (COD and paid orders). Pending payments and abandoned carts are not.</li>
+        <li>Orders placed while the box was off are not announced after it restarts.</li>
+        <li>OLED blank? Check its wiring: SDA&nbsp;21, SCL&nbsp;22, VCC&nbsp;3V3.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>It keeps restarting</summary>
+      <p>Usually power. Use a good cable and charger, check for loose wires, and add a 470&ndash;1000&nbsp;&micro;F capacitor across the amplifier's VIN and GND.</p>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  Made by <a href="https://www.youtube.com/@techiesms" target="_blank" rel="noopener">techiesms</a>
+  &middot; <a href="https://www.youtube.com/@techiesms" target="_blank" rel="noopener">YouTube</a>
+  &middot; <a href="https://techiesms.com" target="_blank" rel="noopener">techiesms.com</a>
+  &middot; <a href="https://github.com/Shubhjaiswal408/woo-soundbox-flasher" target="_blank" rel="noopener">GitHub</a><br>
+  Flasher powered by <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a><br>
+  Hobby project. Not affiliated with or endorsed by WooCommerce or Automattic.
+</footer>
+
+</body>
+</html>

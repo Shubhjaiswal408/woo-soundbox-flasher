@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Roboto, sans-serif">
+  <title id="t">Inside the WooCommerce Soundbox code</title>
+  <desc id="d">At start-up the code loads settings or opens the setup hotspot, joins Wi-Fi, beeps, and on the first check remembers existing orders without announcing them. Then every 10 seconds it fetches 20 processing orders, finds IDs it has not seen and announces them oldest first. Holding BOOT for 10 seconds erases the settings.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5b6472"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" rx="16" fill="#ffffff"/>
+  <text x="32" y="44" font-size="22" font-weight="600" fill="#111827">Inside the code</text>
+  <text x="32" y="70" font-size="14" fill="#5b6472">WooSoundbox.ino — function names in brackets</text>
+
+  <!-- START-UP -->
+  <text x="32" y="112" font-size="13" font-weight="600" fill="#5b6472" letter-spacing="1">START-UP  (setup)</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="32"  y="124" width="150" height="64" rx="10" fill="#f3f4f6" stroke="#9ca3af"/>
+    <text x="107" y="150" font-weight="600" fill="#111827">Settings saved?</text>
+    <text x="107" y="170" fill="#4b5563">(loadConfig)</text>
+
+    <rect x="214" y="124" width="140" height="64" rx="10" fill="#f3f4f6" stroke="#9ca3af"/>
+    <text x="284" y="150" font-weight="600" fill="#111827">Join Wi-Fi</text>
+    <text x="284" y="170" fill="#4b5563">(connectWiFi)</text>
+
+    <rect x="386" y="124" width="140" height="64" rx="10" fill="#f3f4f6" stroke="#9ca3af"/>
+    <text x="456" y="150" font-weight="600" fill="#111827">Beep = ready</text>
+    <text x="456" y="170" fill="#4b5563">(playBeep)</text>
+
+    <rect x="558" y="124" width="370" height="64" rx="10" fill="#f3f4f6" stroke="#9ca3af"/>
+    <text x="743" y="150" font-weight="600" fill="#111827">First check: remember up to 100 orders</text>
+    <text x="743" y="170" fill="#4b5563">announce nothing, so old orders stay quiet</text>
+  </g>
+  <g stroke="#5b6472" stroke-width="2" marker-end="url(#a)">
+    <line x1="182" y1="156" x2="210" y2="156"/>
+    <line x1="354" y1="156" x2="382" y2="156"/>
+    <line x1="526" y1="156" x2="554" y2="156"/>
+  </g>
+  <path d="M107 188 L107 222" stroke="#d97706" stroke-width="2" marker-end="url(#a)"/>
+  <text x="116" y="210" font-size="12" fill="#b45309">no</text>
+  <rect x="32" y="226" width="330" height="44" rx="10" fill="#fff7e6" stroke="#d97706"/>
+  <text x="197" y="253" font-size="13" text-anchor="middle" fill="#7c4a03">Setup hotspot "Woo-Soundbox" (runPortal)</text>
+  <text x="380" y="246" font-size="12" fill="#b45309">also opens if Wi-Fi fails or the store</text>
+  <text x="380" y="262" font-size="12" fill="#b45309">rejects the key (HTTP 401 / 404)</text>
+
+  <!-- EVERY 10 s -->
+  <text x="32" y="320" font-size="13" font-weight="600" fill="#5b6472" letter-spacing="1">EVERY 10 SECONDS  (checkStore)</text>
+  <rect x="32" y="332" width="420" height="236" rx="12" fill="#f3f0ff" stroke="#7c6cd6"/>
+  <g font-size="13" fill="#3b2f87">
+    <text x="52" y="364" font-weight="600">Ask the store (fetchOrders):</text>
+    <text x="52" y="390">GET /wp-json/wc/v3/orders?status=processing</text>
+    <text x="52" y="410">    &amp;per_page=20&amp;_fields=id,total,billing.first_name</text>
+    <text x="52" y="440">• fresh HTTPS connection every time</text>
+    <text x="52" y="462">• retry once if it fails</text>
+    <text x="52" y="484">• reply ~700 bytes, takes 2–4 s</text>
+    <text x="52" y="520" fill="#5a4fa8">Compare IDs with the last 100 seen</text>
+    <text x="52" y="542" fill="#5a4fa8">(isSeen / markSeen)</text>
+  </g>
+
+  <line x1="452" y1="450" x2="504" y2="450" stroke="#5b6472" stroke-width="2" marker-end="url(#a)"/>
+  <text x="478" y="440" font-size="12" fill="#5b6472" text-anchor="middle">new IDs</text>
+
+  <!-- ANNOUNCE -->
+  <text x="508" y="320" font-size="13" font-weight="600" fill="#5b6472" letter-spacing="1">FOR EACH NEW ORDER, OLDEST FIRST</text>
+  <rect x="508" y="332" width="420" height="236" rx="12" fill="#ecfdf3" stroke="#3fb950"/>
+  <g font-size="13" fill="#14532d">
+    <text x="528" y="364" font-weight="600">Announce it (announceOrder):</text>
+    <text x="528" y="390">1. OLED: "#4521 Rahul" + big "Rs.1499" (oledOrder)</text>
+    <text x="528" y="414">2. LED on</text>
+    <text x="528" y="438">3. Google voice: "New order received of rupees 1499"</text>
+    <text x="528" y="462">    (speak) — if it fails: two beeps instead</text>
+    <text x="528" y="486">4. LED off, remember the ID</text>
+    <text x="528" y="522" font-weight="600">BOOT held 10 s (checkFactoryReset):</text>
+    <text x="528" y="546">countdown on the OLED → erase → setup</text>
+  </g>
+</svg>
