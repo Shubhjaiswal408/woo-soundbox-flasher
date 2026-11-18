@@ -88,7 +88,6 @@
   }
   .btn-secondary:hover { border-color: var(--accent); background: #1c2330; }
   .links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-  .diagram { display: block; width: 100%; height: auto; border-radius: 10px; margin-top: 4px; }
 
   /* ---- Grid of info cards ---- */
   .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 16px; }
@@ -152,16 +151,6 @@
       <a class="btn-secondary" href="https://github.com/Shubhjaiswal408/woo-soundbox-flasher#readme" target="_blank" rel="noopener">Read the full guide</a>
       <a class="btn-secondary" href="https://github.com/Shubhjaiswal408/woo-soundbox-flasher/tree/main/source/WooSoundbox" target="_blank" rel="noopener">Source code</a>
     </div>
-  </section>
-
-  <!-- How it works -->
-  <section class="card">
-    <h2>How it works</h2>
-    <img class="diagram" src="assets/how-it-works.svg" alt="A customer orders, WooCommerce marks it processing, the ESP32 asks the store every 10 seconds, then the OLED shows the order and the speaker says it" loading="lazy" width="960" height="360">
-    <details style="margin-top:12px">
-      <summary>Inside the code</summary>
-      <img class="diagram" src="assets/code-flow.svg" alt="Start-up steps, then a loop every 10 seconds that fetches orders, finds new IDs and announces them oldest first" loading="lazy" width="960" height="600" style="margin-top:12px">
-    </details>
   </section>
 
   <div class="grid">
